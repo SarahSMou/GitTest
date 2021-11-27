@@ -447,6 +447,7 @@ class state16(smach.state):
                 	# Continue navigating to correct distance from deposition zone
                 	pass
 
+# STATE 17: Orient with deposition bin
 class state16(smach.state):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state17']) 
