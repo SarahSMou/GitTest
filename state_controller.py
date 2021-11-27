@@ -305,11 +305,202 @@ class state1(smach.State):
 		self.counter = 0
 	def execute(self, userdata):
 		# Probably some setup code
-		pass
+		return 'state2'
 
 class state2(smach.state):
 	
+# STATE 9: LINEAR ACTUATORS LIFT DRUM
+class state10(smach.state):
+	def __init__(self):
+		smach.State.__init__(self, outcomes=['state11', 'state8'])
+	def execute(self, userdata):
+		if (bin_full or arm_min_extend):
+                	return 'state11'
+            	else:
+                	return 'state8'
 	
+# STATE 11: Arms lift drum until it is just below surface level
+class state11(smach.state):
+	def __init__(self):
+         	smach.State.__init__(self, outcomes=['state12']) 
+	def execute(self, userdata):
+		if (arm_rot_reached):
+                	return 'state12'
+           	else:
+                	# Continue lifting drum
+                	pass
+		
+# STATE 12: Move forward until all wheels are in front of the hole
+class state12(smach.state):
+	def __init__(self):
+         	smach.State.__init__(self, outcomes=['state13']) 
+	def execute(self, userdata):
+		if (lidar_data):
+                	# Move around the obstacle using sensors
+                	# If unsuccessful, switch to manual control
+                	pass
+
+            	if (robot_exited_hole):
+                	return 'state13'
+            	else:
+                	# Continue moving over the hole
+                	pass
+
+# STATE 13: Lift arms into driving configuration
+class state13(smach.state):
+	def __init__(self):
+         	smach.State.__init__(self, outcomes=['state14']) 
+	def execute(self, userdata):
+		#stop spinning
+            	arm_vec = Limb_Vector()
+            	arm_vec.linActs_speed = 0
+            	arm_vec.arm_speed = 0
+            	arm_vec.drum_speed = 0
+            	arm_vec.door = False 
+
+            	pub_limb_cmd.publish(arm_vec)
+            	return 'state14'
+	
+# STATE 14: Drum stops spinning
+class state14(smach.state):
+	def __init__(self):
+         	smach.State.__init__(self, outcomes=['state0', 'state15']) 
+	def execute(self, userdata):
+		            # Error checking
+            	#If AR Tag isn't seen, move forward until 5 seconds pass, then
+            	#switch to manual control
+            	if not artag_seen:
+                	curr_state_start_time = rospy.get_time()
+                	current_time = rospy.get_time()
+                	while not artag_seen and current_time < curr_state_start_time + 5:
+                    		drive_vector = Drive_Vector()
+                    		drive_vector.robot_spd = 101
+                    		drive_vector.offset_driveMode = 0
+                    		pub_drive_cmd.publish(drive_vector)
+                    
+                    		current_time = rospy.get_time()
+			
+                	if not artag_seen:
+                    		return 'state0'
+                
+            	ros_log("desired orient:" + str(((math.atan((robot_pose.x) / robot_pose.y)) * 180 / math.pi)+180))
+            	ros_log("orientation:" + str(robot_pose.orientation))
+            	ros_log("x:" + str(robot_pose.x))
+            	ros_log("y:" + str(robot_pose.y))
+            	if ROTATION_TOLERANCE >= abs(((math.atan((robot_pose.x) / robot_pose.y)) * 180 / math.pi)+180 - robot_pose.orientation):
+                	ros_log("robot correct")
+                	return 'state15'
+            	else:
+                	# Robot rotates in place
+                	outmsg = Drive_Vector()
+                	outmsg.offset_driveMode = 254
+                	outmsg.robot_spd = 150
+
+                	pub_drive_cmd.publish(outmsg)
+
+# STATE 15: Navigating from digging zone to deposition zone			
+class state15(smach.state):
+	def __init__(self):
+         	smach.State.__init__(self, outcomes=['state16']) 
+	def execute(self, userdata):
+		# Continue navigating to correct distance from deposition zone
+            	x_difference = abs(DEPOSITION_ZONE.x - robot_pose.x)
+            	y_difference = abs(DEPOSITION_ZONE.y - robot_pose.y)
+
+            	# Check that robot is within tolerance at depo zone
+            	if (x_difference < TARGET_TOLERANCE) and (y_difference < TARGET_TOLERANCE):
+                	return 'state16'
+            	
+		if not robot_pose == None:
+                	ros_log("DEBUG: PUBLISHING")
+                
+                	outvec = Orientation_Vector()
+                	outvec.robot_pose = robot_pose
+                	outvec.target_zone = DEPOSITION_ZONE
+                	outvec.robot_speed = 200
+
+                	pub_pid.publish(outvec)
+			
+# STATE 16: Machine navigates to some distance from depo zone
+class state16(smach.state):
+	def __init__(self):
+         	smach.State.__init__(self, outcomes=['state17']) 
+	def execute(self, userdata):
+            	ros_log("DEBUG: STATE 16")
+            	# Error checking
+            	if (robot_cannot_move):  # temp variable
+                	# Find reverse of drive vector and input (backtrack)
+                	# If unsuccessful, switch to manual control
+                	pass
+            	elif (lidar_data):
+                	# Move around the obstacle using sensors
+                	# If unsuccessful, switch to manual control
+                	pass
+            	elif (artag_seen == False):
+                	# Spin in place (3 rotations per 10 seconds)
+                	# If unsuccessful, switch to manual control
+                	pass
+
+            	if (depo_is_parallel and depo_is_close):
+                	return 'state17'
+            	else:
+                	# Continue navigating to correct distance from deposition zone
+                	pass
+
+class state16(smach.state):
+	def __init__(self):
+         	smach.State.__init__(self, outcomes=['state17']) 
+	def execute(self, userdata):
+		# if robot is toward depo, current angle is positive; if facing away, is negative
+            	depo_current_angle = math.degrees(math.asin((depo_back_lidar_dist - depo_front_lidar_dist) / DEPO_LIDAR_MOUNT_DIST)) 
+            	"""
+            	TODO: the following line is needed if we want to have a target "angle of approach" for the bot to drive toward the depo bin
+            	depo_angle_ready = True if (DEPO_APPR_ANGLE - depo_current_angle) < DEPO_APPR_ANGLE_TOLERANCE else False
+            	"""
+
+            	# other variables
+            	depo_front_lidar_dist = lidar_data.depo_front
+            	depo_back_lidar_dist = lidar_data.depo_back
+            	depo_dist = depo_front_lidar_dist if depo_front_lidar_dist < depo_back_lidar_dist else depo_back_lidar_dist
+            	facing_toward = True if depo_front_lidar_dist < depo_back_lidar_dist else False
+            	depo_is_close = True if abs(depo_dist - DEPO_TARGET_DIST) < DEPO_TARGET_DIST_TOLERANCE else False
+            	depo_is_parallel = True if abs(depo_current_angle) < PARALLEL_TOLERANCE else False
+            	ros_log("DEBUG: STATE 16")
+            
+            	# Error checking
+            	if robot_cannot_move:  # temp variable
+                	# Find reverse of drive vector and input (backtrack)
+                	# If unsuccessful, switch to manual control
+                	pass
+            	elif lidar_data:
+                	# Move around the obstacle using sensors
+                	# If unsuccessful, switch to manual control
+                	pass
+
+            	if depo_is_parallel and depo_is_close:
+                	return 'state17'
+            	else: # Continue navigating to correct distance from deposition zone
+                	"""
+                	# CASE 0: too far forward
+                	# TODO: if the too far forward case is needed: define the variable below, "how_far_forward"; figure out how the robot will know that it is too far forward, and code that
+                	if how_far_forward > FORWARD_DIST_TOLERANCE:    
+                    	send_drive_command(0, 90) # 10% speed backward
+                	"""
+                    
+                	# CASE 1: within dist, but not parallel
+                	if depo_is_close:
+                    		if facing_toward:
+                        		send_drive_command(254, 90) # turn left at 10% speed
+                    		else: # facing away
+                        		send_drive_command(254, 110) # turn right at 10% speed
+
+                	# CASE 2: not within dist
+                	else:
+                    		if depo_angle_ready:
+                        		send_drive_command(0, 110) # 10% speed forward
+                    		else:
+                        		send_drive_command(254, 110) # turn right until depo angle ready
+		
 def main():
     global robot_state
     global DIG_ZONE
