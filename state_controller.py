@@ -9,8 +9,10 @@ Completed states: 2, 4, 5, 14, 15, 19, 20, 24, 27(Ri5B)
 Tested states: 2, 4
 """
 
+import roslib; roslib.load_manifest('smach_tutorials')
 import rospy
-import math
+import smach
+import smach_ros
 
 from std_msgs.msg import String
 from std_msgs.msg import Bool
@@ -278,6 +280,36 @@ def send_drive_command(driveMode, speed):
     outmsg.robot_spd = speed
     pub_drive_cmd.publish(outmsg)
 
+# STATE 0: Manual state
+class state0(smach.State):
+	def __init__(self):
+		smach.State.__init__(self, outcomes=['state1'])
+		self.counter = 0
+	def execute(self, userdata):
+		rospy.loginfo('Executing state 0')
+		print("Matthew is stupid ")
+            global last_limb_keys
+            global last_keys 
+
+            # Process the last received manual commands and send them
+            drive_vec = Drive_Vector() 
+            process_manual_cmd(drive_vec)
+            pub_drive_cmd.publish(drive_vec)
+            limb_vec = process_limb_cmd()
+            pub_limb_cmd.publish(limb_vec)
+
+# STATE 1: Competition starts
+class state1(smach.State):
+	def __init__(self):
+		smach.State.__init__(self, outcomes=['state2'])
+		self.counter = 0
+	def execute(self, userdata):
+		# Probably some setup code
+		pass
+
+class state2(smach.state):
+	
+	
 def main():
     global robot_state
     global DIG_ZONE
