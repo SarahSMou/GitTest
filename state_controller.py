@@ -307,8 +307,158 @@ class state1(smach.State):
 		# Probably some setup code
 		return 'state2'
 
+# STATE 2: Machine connects to NUC
 class state2(smach.state):
-	
+	def __init__(self):
+		smach.State.__init__(self, outcomes=['state3']
+	def execute(self, userdata):
+		ros_log("DEBUG: STATE 2")
+	    	# if drive_and_limbs_connected and sensor_connected and obstacle_connected:
+		if drive_and_limbs_connected:
+	 		return 'state3'
+				     
+# STATE 3: Initiate autonomy program
+class state3(smach.state):
+	def __init__(self):
+		smach.State.__init__(self, outcomes=['state4']
+	def execute(self, userdata):
+		ros_log("DEBUG: STATE 3")
+            	# More setup code?
+            	return 'state4'
+				     
+# STATE 4: Deploy Lifting Arms
+class state4(smach.state):
+	def __init__(self):
+		smach.State.__init__(self, outcomes=['state5']
+	def execute(self, userdata):
+		# Initialize state_4_start_time
+		if(curr_state_start_time == None): 
+			curr_state_start_time = rospy.get_time()
+			ros_log("DEBUG: STATE 4")
+		current_time = rospy.get_time() 
+				     
+		# Try to localize robot for 30 seconds
+		if robot_localized: 
+			ros_log("DEBUG: ROBOT LOCALIZED")
+			curr_state_start_time = None
+			return 'state5'
+
+            	# ERROR STATE: Ri4a
+           	elif current_time - curr_state_start_time > 30:
+                	pass
+
+# STATE 5: Nuc localizes robot
+class state5(smach.state):
+	def __init__(self):
+		smach.State.__init__(self, outcomes=['state27']
+	def execute(self, userdata):
+		ros_log("DEBUG: STATE 5")
+	        if lidar_data is not None and (lidar_data.left or lidar_data.right):
+			return 'state27'
+
+	    	# Build Orientation_Vector consisting of bot and digging zone positions
+		elif not robot_pose == None:
+			ros_log("DEBUG: PUBLISHING")
+
+			outvec = Orientation_Vector()
+			outvec.robot_pose = robot_pose
+			outvec.target_zone = DIG_ZONE
+			outvec.robot_speed = 200
+
+			pub_pid.publish(outvec)	   
+
+# STATE 6: Machine moves to digging area
+class state6(smach.state):
+	def __init__(self):
+		smach.State.__init__(self, outcomes=['state7']
+	def execute(self, userdata):
+		x_difference = abs(DIG_ZONE.x - robot_pose.x)
+            	y_difference = abs(DIG_ZONE.y - robot_pose.y)
+
+            	if x_difference < TARGET_TOLERANCE and y_difference < TARGET_TOLERANCE: #digging zone reached
+                	return 'state7'
+
+           	 if not robot_pose == None:
+                	ros_log("DEBUG: PUBLISHING STATE 6")
+                
+			outvec = Orientation_Vector()
+			outvec.robot_pose = robot_pose
+			outvec.target_zone = DIG_ZONE
+			outvec.robot_speed = 200
+
+			pub_pid.publish(outvec)			     
+
+# STATE 7: Drum begins to turn
+class state7(smach.state):
+	def __init__(self):
+		smach.State.__init__(self, outcomes=['state8']
+	def execute(self, userdata):
+		if (drum_turning):
+                	return 'state8'
+            	else:
+			# Start turning drums
+			outvec = Limb_Vector(door = False, linActs_speed = 0, arm_speed = 0, drum_speed = 3)
+			pub_limb_cmd.publish(outvec)				     
+				     
+# STATE 8: Arms lower drum until contact
+class state8(smach.state):
+	def __init__(self):
+		smach.State.__init__(self, outcomes=['state9']
+	def execute(self, userdata):
+		 # Error checking
+		 if (arm_gears_slip):
+			# Rotate in opposite direction and keep encoder rotation at 0
+			outvec = Limb_Vector(door = False,
+					     linActs_speed = 0,
+					     arm_speed = -10,
+					     drum_speed = 0)
+
+			pub_limb_cmd.publish(outvec)
+		 elif (not lin_act_ready):
+			# Shorten the linear acuators so that the arms can lower as much as possible
+			outvec = Limb_Vector(door = False,
+					     linActs_speed = -50,
+					     arm_speed = 0,
+					     drum_speed = 0)
+
+			pub_limb_cmd.publish(outvec)
+
+		 elif (arm_hit_surface or arm_min_extend):
+			return 'state9'
+		 else:
+			# Continue lowering arms
+			outvec = Limb_Vector(door = False,
+					     linActs_speed = 0,
+					     arm_speed = 10,
+					     drum_speed = 100)
+
+			pub_limb_cmd.publish(outvec)	
+				     
+# STATE 8: Linear actuators push drum down to dig
+class state9(smach.state):
+	def __init__(self):
+		smach.State.__init__(self, outcomes=['state10']
+	def execute(self, userdata):
+		# Error checking
+	    	if (lin_act_stuck):
+			# Shift around until there is movement
+			outvec = Limb_Vector(door = False,
+					     linActs_speed = -50,
+					     arm_speed = 0,
+					     drum_speed = 100)
+
+			pub_limb_cmd.publish(outvec)
+	    	elif (bin_full or lin_act_ext):
+			return 'state10'
+	    	else:
+			# Continue pushing drum down to dig
+			outvec = Limb_Vector(door = False,
+					     linActs_speed = 100,
+					     arm_speed = 0,
+					     drum_speed = 100)
+
+			pub_limb_cmd.publish(outvec)				     
+				  	
 # STATE 9: LINEAR ACTUATORS LIFT DRUM
 class state10(smach.state):
 	def __init__(self):
