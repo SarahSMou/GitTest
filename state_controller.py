@@ -651,7 +651,156 @@ class state16(smach.state):
                         		send_drive_command(0, 110) # 10% speed forward
                     		else:
                         		send_drive_command(254, 110) # turn right until depo angle ready
-		
+# STATE 18: Arms raise frame to upper limit
+class state18(smach.state):
+	def __init__(self):
+         	smach.State.__init__(self, outcomes=['state19']) 
+	def execute(self, userdata):
+            if (robot_unstable):
+                # Extend arms slightly to distribute weight
+                pass
+
+            if (arm_depo_ready):
+                return 'state19'
+            else:
+                # Continue raising the arms
+                pass
+
+# STATE 19: Open storage bin door to release payload
+class state19(smach.state):
+	def __init__(self):
+         	smach.State.__init__(self, outcomes=['state20']) 
+	def execute(self, userdata):
+            if (bin_empty):
+                return 'state20'
+            else:
+                # Send out 'open door' vector
+                outvec = Limb_Vector()
+                outvec.linActs_speed = 0
+                outvec.arm_speed = 0
+                outvec.drum_speed = 0
+
+                outvec.door = True 
+
+                pub_limb_cmd.publish(outvec)
+
+# STATE 20: Close door
+class state20(smach.state):
+	def __init__(self):
+         	smach.State.__init__(self, outcomes=['state21']) 
+	def execute(self, userdata):
+            if (door_closed):
+                return 'state21'
+            else:
+                # Send out 'close door' vector
+                outvec = Limb_Vector()
+                outvec.linActs_speed = 0
+                outvec.arm_speed = 0
+                outvec.drum_speed = 0
+
+                outvec.door = False 
+
+                pub_limb_cmd.publish(outvec)
+
+# STATE 21: Close door
+class state21(smach.state):
+	def __init__(self):
+         	smach.State.__init__(self, outcomes=['state22']) 
+	def execute(self, userdata):
+            if (door_closed):
+                return 'state22'
+            else:
+                # Close the door
+                pass
+
+# STATE 22: Lower linear actuators into driving configuration
+class state22(smach.state):
+	def __init__(self):
+         	smach.State.__init__(self, outcomes=['state23']) 
+	def execute(self, userdata):
+            if (lin_act_drive_config):
+                return 'state23'
+            else:
+                # Continue lowering linear actuators
+                pass
+
+# STATE 23: Lower arms into driving configuration
+class state23(smach.state):
+	def __init__(self):
+         	smach.State.__init__(self, outcomes=['state24']) 
+	def execute(self, userdata):
+            if (arm_drive_config):
+                return 'state24'
+            else:
+                # Continue lowering arms
+                pass
+
+# STATE 24: Navigate back/diagonally until April Tags sighted
+class state24(smach.state):
+	def __init__(self):
+         	smach.State.__init__(self, outcomes=['state4']) 
+	def execute(self, userdata):
+            # Error checking
+            if not artag_seen:
+                # (Keep rotating)
+                pass
+
+            # Use law of cosines to find desired angle (c^2 = a^2 + b^2 - 2ab * cos(C))
+            # Where a, b, c = triangle sides and C = desired angle
+            # Three points will be robot robot_x/y++, x/y, and the dig zone
+            top_p = (robot_pose.x, robot_pose.y + 1)
+            robot_p = (robot_pose.x, robot_pose.y)
+            dig_p = (DIG_ZONE.x, DIG_ZONE.y)
+
+            # I am using distance formula (dist = sqrt((x2 - x1)^2 + (y2 - y1)^2))
+            a_sq = ((top_p[0] - robot_p[0]) ** 2 ) + ((top_p[1] - robot_p[1]) ** 2)
+            b_sq = ((dig_p[0] - robot_p[0]) ** 2 ) + ((dig_p[1] - robot_p[1]) ** 2)
+            c_sq = ((top_p[0] - dig_p[0]) ** 2 ) + ((top_p[1] - dig_p[1]) ** 2)
+
+            a = math.sqrt(a_sq)
+            b = math.sqrt(b_sq)
+            
+            desired_orient = math.acos((a_sq + b_sq - c_sq) / (2 * a * b))
+            
+            ros_log("desired orient:" + desired_orient)
+            ros_log("orientation:" + str(robot_pose.orientation))
+            ros_log("x:" + str(robot_pose.x))
+            ros_log("y:" + str(robot_pose.y))
+            
+            if ROTATION_TOLERANCE >= abs(desired_orient - robot_pose.orientation):
+                ros_log("robot correct")
+                return 'state4'  # The next state
+            else:
+                # Robot rotates in place
+                outmsg = Drive_Vector()
+                outmsg.offset_driveMode = 254  # Turn in place
+                outmsg.robot_spd = 150  # 50% speed forward rotation
+            
+                pub_drive_cmd.publish(outmsg)
+
+# STATE Ri5B: Error state of obstacle detected
+class state27(smach.state):
+	def __init__(self):
+         	smach.State.__init__(self, outcomes=['state5']) 
+	def execute(self, userdata):
+            ros.log("DEBUG STATE 27")
+            # If no more obstacle detected, transition back to state 5
+            if (not (lidar_data.left or lidar_data.right)):
+                return 'state5'
+            else:
+                # Turn left if obstacle to the right, & vice versa
+                if (lidar_data.left):
+                    speed = TURN_IN_PLACE_SPEED
+                else:
+                    speed = 200 - TURN_IN_PLACE_SPEED
+                    
+                # Send out correcting drive vector to turn bot in place
+                rot = Drive_Vector()
+                rot.offset_driveMode = 254
+                rot.robot_spd = speed
+                pub_drive_cmd.publish(rot)
+
+
 def main():
     global robot_state
     global DIG_ZONE
