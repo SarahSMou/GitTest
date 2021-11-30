@@ -829,7 +829,7 @@ def main():
     curr_state_start_time = None
 
     # Creating a state machine
-    sm = smach.StateMachine(outcomes=['outcome4'])
+    sm = smach.StateMachine(outcomes=['']) # Outcome of State Machine should go here?
     
     # Open Container
     with sm:
