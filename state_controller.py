@@ -839,6 +839,8 @@ def main():
 	smach.StateMachine.add('state5', state5(), transitions = {'state27': 'state27'})
 				     
     outcome = sm.execute()
+
+    # maybe return statements should be called outcome# instead of state#. Could perhaps lead to an error.
 		
 
 
