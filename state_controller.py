@@ -308,7 +308,7 @@ class state1(smach.State):
 		return 'state2'
 
 # STATE 2: Machine connects to NUC
-class state2(smach.state):
+class state2(smach.State):
 	def __init__(self):
 		smach.State.__init__(self, outcomes=['state3']
 	def execute(self, userdata):
@@ -318,7 +318,7 @@ class state2(smach.state):
 	 		return 'state3'
 				     
 # STATE 3: Initiate autonomy program
-class state3(smach.state):
+class state3(smach.State):
 	def __init__(self):
 		smach.State.__init__(self, outcomes=['state4']
 	def execute(self, userdata):
@@ -327,7 +327,7 @@ class state3(smach.state):
             	return 'state4'
 				     
 # STATE 4: Deploy Lifting Arms
-class state4(smach.state):
+class state4(smach.State):
 	def __init__(self):
 		smach.State.__init__(self, outcomes=['state5']
 	def execute(self, userdata):
@@ -348,7 +348,7 @@ class state4(smach.state):
                 	pass
 
 # STATE 5: Nuc localizes robot
-class state5(smach.state):
+class state5(smach.State):
 	def __init__(self):
 		smach.State.__init__(self, outcomes=['state27']
 	def execute(self, userdata):
@@ -368,7 +368,7 @@ class state5(smach.state):
 			pub_pid.publish(outvec)	   
 
 # STATE 6: Machine moves to digging area
-class state6(smach.state):
+class state6(smach.State):
 	def __init__(self):
 		smach.State.__init__(self, outcomes=['state7']
 	def execute(self, userdata):
@@ -389,7 +389,7 @@ class state6(smach.state):
 			pub_pid.publish(outvec)			     
 
 # STATE 7: Drum begins to turn
-class state7(smach.state):
+class state7(smach.State):
 	def __init__(self):
 		smach.State.__init__(self, outcomes=['state8']
 	def execute(self, userdata):
@@ -401,7 +401,7 @@ class state7(smach.state):
 			pub_limb_cmd.publish(outvec)				     
 				     
 # STATE 8: Arms lower drum until contact
-class state8(smach.state):
+class state8(smach.State):
 	def __init__(self):
 		smach.State.__init__(self, outcomes=['state9']
 	def execute(self, userdata):
@@ -435,7 +435,7 @@ class state8(smach.state):
 			pub_limb_cmd.publish(outvec)	
 				     
 # STATE 8: Linear actuators push drum down to dig
-class state9(smach.state):
+class state9(smach.State):
 	def __init__(self):
 		smach.State.__init__(self, outcomes=['state10']
 	def execute(self, userdata):
@@ -460,7 +460,7 @@ class state9(smach.state):
 			pub_limb_cmd.publish(outvec)				     
 				  	
 # STATE 9: LINEAR ACTUATORS LIFT DRUM
-class state10(smach.state):
+class state10(smach.State):
 	def __init__(self):
 		smach.State.__init__(self, outcomes=['state11', 'state8'])
 	def execute(self, userdata):
@@ -470,7 +470,7 @@ class state10(smach.state):
                 	return 'state8'
 	
 # STATE 11: Arms lift drum until it is just below surface level
-class state11(smach.state):
+class state11(smach.State):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state12']) 
 	def execute(self, userdata):
@@ -481,7 +481,7 @@ class state11(smach.state):
                 	pass
 		
 # STATE 12: Move forward until all wheels are in front of the hole
-class state12(smach.state):
+class state12(smach.State):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state13']) 
 	def execute(self, userdata):
@@ -497,7 +497,7 @@ class state12(smach.state):
                 	pass
 
 # STATE 13: Lift arms into driving configuration
-class state13(smach.state):
+class state13(smach.State):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state14']) 
 	def execute(self, userdata):
@@ -512,7 +512,7 @@ class state13(smach.state):
             	return 'state14'
 	
 # STATE 14: Drum stops spinning
-class state14(smach.state):
+class state14(smach.State):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state0', 'state15']) 
 	def execute(self, userdata):
@@ -549,7 +549,7 @@ class state14(smach.state):
                 	pub_drive_cmd.publish(outmsg)
 
 # STATE 15: Navigating from digging zone to deposition zone			
-class state15(smach.state):
+class state15(smach.State):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state16']) 
 	def execute(self, userdata):
@@ -572,7 +572,7 @@ class state15(smach.state):
                 	pub_pid.publish(outvec)
 			
 # STATE 16: Machine navigates to some distance from depo zone
-class state16(smach.state):
+class state16(smach.State):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state17']) 
 	def execute(self, userdata):
@@ -598,7 +598,7 @@ class state16(smach.state):
                 	pass
 
 # STATE 17: Orient with deposition bin
-class state16(smach.state):
+class state16(smach.State):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state17']) 
 	def execute(self, userdata):
@@ -652,7 +652,7 @@ class state16(smach.state):
                     		else:
                         		send_drive_command(254, 110) # turn right until depo angle ready
 # STATE 18: Arms raise frame to upper limit
-class state18(smach.state):
+class state18(smach.State):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state19']) 
 	def execute(self, userdata):
@@ -667,7 +667,7 @@ class state18(smach.state):
                 pass
 
 # STATE 19: Open storage bin door to release payload
-class state19(smach.state):
+class state19(smach.State):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state20']) 
 	def execute(self, userdata):
@@ -685,7 +685,7 @@ class state19(smach.state):
                 pub_limb_cmd.publish(outvec)
 
 # STATE 20: Close door
-class state20(smach.state):
+class state20(smach.State):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state21']) 
 	def execute(self, userdata):
@@ -703,7 +703,7 @@ class state20(smach.state):
                 pub_limb_cmd.publish(outvec)
 
 # STATE 21: Close door
-class state21(smach.state):
+class state21(smach.State):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state22']) 
 	def execute(self, userdata):
@@ -714,7 +714,7 @@ class state21(smach.state):
                 pass
 
 # STATE 22: Lower linear actuators into driving configuration
-class state22(smach.state):
+class state22(smach.State):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state23']) 
 	def execute(self, userdata):
@@ -725,7 +725,7 @@ class state22(smach.state):
                 pass
 
 # STATE 23: Lower arms into driving configuration
-class state23(smach.state):
+class state23(smach.State):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state24']) 
 	def execute(self, userdata):
@@ -736,7 +736,7 @@ class state23(smach.state):
                 pass
 
 # STATE 24: Navigate back/diagonally until April Tags sighted
-class state24(smach.state):
+class state24(smach.State):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state4']) 
 	def execute(self, userdata):
@@ -779,7 +779,7 @@ class state24(smach.state):
                 pub_drive_cmd.publish(outmsg)
 
 # STATE Ri5B: Error state of obstacle detected
-class state27(smach.state):
+class state27(smach.State):
 	def __init__(self):
          	smach.State.__init__(self, outcomes=['state5']) 
 	def execute(self, userdata):
