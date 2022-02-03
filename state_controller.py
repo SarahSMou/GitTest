@@ -834,9 +834,9 @@ def main():
     # Open Container
     with sm:
 	# Add States to the Containter
-	smach.StateMachine.add('state1', state1(), transitions = {'state2': 'state2'})
-	smach.StateMachine.add('state2', state2(), transitions = {'state3': 'state3'})
-	smach.StateMachine.add('state5', state5(), transitions = {'state27': 'state27'})
+	smach.StateMachine.add('state1', state1(), transitions = {'s2': 'state2'})
+	smach.StateMachine.add('state2', state2(), transitions = {'s3': 'state3'})
+	smach.StateMachine.add('state5', state5(), transitions = {'s27': 'state27'})
 				     
     outcome = sm.execute()
 
