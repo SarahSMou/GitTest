@@ -834,9 +834,32 @@ def main():
     # Open Container
     with sm:
 	# Add States to the Containter
+	smach.StateMachine.add('state0', state0(), transitions = {'s1': 'state1'})
 	smach.StateMachine.add('state1', state1(), transitions = {'s2': 'state2'})
 	smach.StateMachine.add('state2', state2(), transitions = {'s3': 'state3'})
+	smach.StateMachine.add('state3', state3(), transitions = {'s4': 'state4'})
+	smach.StateMachine.add('state4', state4(), transitions = {'s5': 'state5'})
 	smach.StateMachine.add('state5', state5(), transitions = {'s27': 'state27'})
+	smach.StateMachine.add('state6', state6(), transitions = {'s7': 'state7'})
+	smach.StateMachine.add('state7', state7(), transitions = {'s8': 'state8'})
+	smach.StateMachine.add('state8', state8(), transitions = {'s9': 'state9'})
+	smach.StateMachine.add('state9', state9(), transitions = {'s10': 'state10'})
+	smach.StateMachine.add('state10', state10(), transitions = {'s11': 'state11', 's8' : 'state8'})
+	smach.StateMachine.add('state11', state11(), transitions = {'s12': 'state12'})
+	smach.StateMachine.add('state12', state12(), transitions = {'s13': 'state13'})
+	smach.StateMachine.add('state13', state13(), transitions = {'s14': 'state14'})
+	smach.StateMachine.add('state14', state14(), transitions = {'s0': 'state0', 's15' : 'state15'})
+	smach.StateMachine.add('state15', state15(), transitions = {'s16': 'state16'})
+	smach.StateMachine.add('state16', state16(), transitions = {'s17': 'state17'})
+	# smach.StateMachine.add('state17', state17(), transitions = {'s18': 'state18'})
+	smach.StateMachine.add('state18', state18(), transitions = {'s19': 'state19'})
+	smach.StateMachine.add('state19', state19(), transitions = {'s20': 'state20'})
+	smach.StateMachine.add('state20', state20(), transitions = {'s21': 'state21'})
+	smach.StateMachine.add('state21', state21(), transitions = {'s22': 'state22'})
+	smach.StateMachine.add('state22', state22(), transitions = {'s23': 'state23'})
+	smach.StateMachine.add('state23', state23(), transitions = {'s24': 'state24'})
+	smach.StateMachine.add('state24', state24(), transitions = {'s4': 'state4'})
+	smach.StateMachine.add('state27', state27(), transitions = {'s5': 'state5'})
 				     
     outcome = sm.execute()
 
