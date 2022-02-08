@@ -283,7 +283,7 @@ def send_drive_command(driveMode, speed):
 # STATE 0: Manual state
 class state0(smach.State):
 	def __init__(self):
-		smach.State.__init__(self, outcomes=['state1'])
+		smach.State.__init__(self, outcomes=['s1'])
 		self.counter = 0
 	def execute(self, userdata):
 		rospy.loginfo('Executing state 0')
@@ -301,35 +301,35 @@ class state0(smach.State):
 # STATE 1: Competition starts
 class state1(smach.State):
 	def __init__(self):
-		smach.State.__init__(self, outcomes=['state2'])
+		smach.State.__init__(self, outcomes=['s2'])
 		self.counter = 0
 	def execute(self, userdata):
 		# Probably some setup code
-		return 'state2'
+		return 's2'
 
 # STATE 2: Machine connects to NUC
 class state2(smach.State):
 	def __init__(self):
-		smach.State.__init__(self, outcomes=['state3']
+		smach.State.__init__(self, outcomes=['s3']
 	def execute(self, userdata):
 		ros_log("DEBUG: STATE 2")
 	    	# if drive_and_limbs_connected and sensor_connected and obstacle_connected:
 		if drive_and_limbs_connected:
-	 		return 'state3'
+	 		return 's3'
 				     
 # STATE 3: Initiate autonomy program
 class state3(smach.State):
 	def __init__(self):
-		smach.State.__init__(self, outcomes=['state4']
+		smach.State.__init__(self, outcomes=['s4']
 	def execute(self, userdata):
 		ros_log("DEBUG: STATE 3")
             	# More setup code?
-            	return 'state4'
+            	return 's4'
 				     
 # STATE 4: Deploy Lifting Arms
 class state4(smach.State):
 	def __init__(self):
-		smach.State.__init__(self, outcomes=['state5']
+		smach.State.__init__(self, outcomes=['s5']
 	def execute(self, userdata):
 		# Initialize state_4_start_time
 		if(curr_state_start_time == None): 
@@ -341,7 +341,7 @@ class state4(smach.State):
 		if robot_localized: 
 			ros_log("DEBUG: ROBOT LOCALIZED")
 			curr_state_start_time = None
-			return 'state5'
+			return 's5'
 
             	# ERROR STATE: Ri4a
            	elif current_time - curr_state_start_time > 30:
@@ -350,11 +350,11 @@ class state4(smach.State):
 # STATE 5: Nuc localizes robot
 class state5(smach.State):
 	def __init__(self):
-		smach.State.__init__(self, outcomes=['state27']
+		smach.State.__init__(self, outcomes=['s27']
 	def execute(self, userdata):
 		ros_log("DEBUG: STATE 5")
 	        if lidar_data is not None and (lidar_data.left or lidar_data.right):
-			return 'state27'
+			return 's27'
 
 	    	# Build Orientation_Vector consisting of bot and digging zone positions
 		elif not robot_pose == None:
@@ -370,13 +370,13 @@ class state5(smach.State):
 # STATE 6: Machine moves to digging area
 class state6(smach.State):
 	def __init__(self):
-		smach.State.__init__(self, outcomes=['state7']
+		smach.State.__init__(self, outcomes=['s7']
 	def execute(self, userdata):
 		x_difference = abs(DIG_ZONE.x - robot_pose.x)
             	y_difference = abs(DIG_ZONE.y - robot_pose.y)
 
             	if x_difference < TARGET_TOLERANCE and y_difference < TARGET_TOLERANCE: #digging zone reached
-                	return 'state7'
+                	return 's7'
 
            	 if not robot_pose == None:
                 	ros_log("DEBUG: PUBLISHING STATE 6")
@@ -391,10 +391,10 @@ class state6(smach.State):
 # STATE 7: Drum begins to turn
 class state7(smach.State):
 	def __init__(self):
-		smach.State.__init__(self, outcomes=['state8']
+		smach.State.__init__(self, outcomes=['s8']
 	def execute(self, userdata):
 		if (drum_turning):
-                	return 'state8'
+                	return 's8'
             	else:
 			# Start turning drums
 			outvec = Limb_Vector(door = False, linActs_speed = 0, arm_speed = 0, drum_speed = 3)
@@ -403,7 +403,7 @@ class state7(smach.State):
 # STATE 8: Arms lower drum until contact
 class state8(smach.State):
 	def __init__(self):
-		smach.State.__init__(self, outcomes=['state9']
+		smach.State.__init__(self, outcomes=['s9']
 	def execute(self, userdata):
 		 # Error checking
 		 if (arm_gears_slip):
@@ -424,7 +424,7 @@ class state8(smach.State):
 			pub_limb_cmd.publish(outvec)
 
 		 elif (arm_hit_surface or arm_min_extend):
-			return 'state9'
+			return 's9'
 		 else:
 			# Continue lowering arms
 			outvec = Limb_Vector(door = False,
@@ -437,7 +437,7 @@ class state8(smach.State):
 # STATE 8: Linear actuators push drum down to dig
 class state9(smach.State):
 	def __init__(self):
-		smach.State.__init__(self, outcomes=['state10']
+		smach.State.__init__(self, outcomes=['s10']
 	def execute(self, userdata):
 		# Error checking
 	    	if (lin_act_stuck):
@@ -462,20 +462,20 @@ class state9(smach.State):
 # STATE 9: LINEAR ACTUATORS LIFT DRUM
 class state10(smach.State):
 	def __init__(self):
-		smach.State.__init__(self, outcomes=['state11', 'state8'])
+		smach.State.__init__(self, outcomes=['s11', 's8'])
 	def execute(self, userdata):
 		if (bin_full or arm_min_extend):
-                	return 'state11'
+                	return 's11'
             	else:
-                	return 'state8'
+                	return 's8'
 	
 # STATE 11: Arms lift drum until it is just below surface level
 class state11(smach.State):
 	def __init__(self):
-         	smach.State.__init__(self, outcomes=['state12']) 
+         	smach.State.__init__(self, outcomes=['s12']) 
 	def execute(self, userdata):
 		if (arm_rot_reached):
-                	return 'state12'
+                	return 's12'
            	else:
                 	# Continue lifting drum
                 	pass
@@ -483,7 +483,7 @@ class state11(smach.State):
 # STATE 12: Move forward until all wheels are in front of the hole
 class state12(smach.State):
 	def __init__(self):
-         	smach.State.__init__(self, outcomes=['state13']) 
+         	smach.State.__init__(self, outcomes=['s13']) 
 	def execute(self, userdata):
 		if (lidar_data):
                 	# Move around the obstacle using sensors
@@ -491,7 +491,7 @@ class state12(smach.State):
                 	pass
 
             	if (robot_exited_hole):
-                	return 'state13'
+                	return 's13'
             	else:
                 	# Continue moving over the hole
                 	pass
@@ -499,7 +499,7 @@ class state12(smach.State):
 # STATE 13: Lift arms into driving configuration
 class state13(smach.State):
 	def __init__(self):
-         	smach.State.__init__(self, outcomes=['state14']) 
+         	smach.State.__init__(self, outcomes=['s14']) 
 	def execute(self, userdata):
 		#stop spinning
             	arm_vec = Limb_Vector()
@@ -509,12 +509,12 @@ class state13(smach.State):
             	arm_vec.door = False 
 
             	pub_limb_cmd.publish(arm_vec)
-            	return 'state14'
+            	return 's14'
 	
 # STATE 14: Drum stops spinning
 class state14(smach.State):
 	def __init__(self):
-         	smach.State.__init__(self, outcomes=['state0', 'state15']) 
+         	smach.State.__init__(self, outcomes=['s0', 's15']) 
 	def execute(self, userdata):
 		            # Error checking
             	#If AR Tag isn't seen, move forward until 5 seconds pass, then
@@ -531,7 +531,7 @@ class state14(smach.State):
                     		current_time = rospy.get_time()
 			
                 	if not artag_seen:
-                    		return 'state0'
+                    		return 's0'
                 
             	ros_log("desired orient:" + str(((math.atan((robot_pose.x) / robot_pose.y)) * 180 / math.pi)+180))
             	ros_log("orientation:" + str(robot_pose.orientation))
@@ -539,7 +539,7 @@ class state14(smach.State):
             	ros_log("y:" + str(robot_pose.y))
             	if ROTATION_TOLERANCE >= abs(((math.atan((robot_pose.x) / robot_pose.y)) * 180 / math.pi)+180 - robot_pose.orientation):
                 	ros_log("robot correct")
-                	return 'state15'
+                	return 's15'
             	else:
                 	# Robot rotates in place
                 	outmsg = Drive_Vector()
@@ -551,7 +551,7 @@ class state14(smach.State):
 # STATE 15: Navigating from digging zone to deposition zone			
 class state15(smach.State):
 	def __init__(self):
-         	smach.State.__init__(self, outcomes=['state16']) 
+         	smach.State.__init__(self, outcomes=['s16']) 
 	def execute(self, userdata):
 		# Continue navigating to correct distance from deposition zone
             	x_difference = abs(DEPOSITION_ZONE.x - robot_pose.x)
@@ -559,7 +559,7 @@ class state15(smach.State):
 
             	# Check that robot is within tolerance at depo zone
             	if (x_difference < TARGET_TOLERANCE) and (y_difference < TARGET_TOLERANCE):
-                	return 'state16'
+                	return 's16'
             	
 		if not robot_pose == None:
                 	ros_log("DEBUG: PUBLISHING")
@@ -574,7 +574,7 @@ class state15(smach.State):
 # STATE 16: Machine navigates to some distance from depo zone
 class state16(smach.State):
 	def __init__(self):
-         	smach.State.__init__(self, outcomes=['state17']) 
+         	smach.State.__init__(self, outcomes=['s17']) 
 	def execute(self, userdata):
             	ros_log("DEBUG: STATE 16")
             	# Error checking
@@ -592,7 +592,7 @@ class state16(smach.State):
                 	pass
 
             	if (depo_is_parallel and depo_is_close):
-                	return 'state17'
+                	return 's17'
             	else:
                 	# Continue navigating to correct distance from deposition zone
                 	pass
@@ -600,7 +600,7 @@ class state16(smach.State):
 # STATE 17: Orient with deposition bin
 class state16(smach.State):
 	def __init__(self):
-         	smach.State.__init__(self, outcomes=['state17']) 
+         	smach.State.__init__(self, outcomes=['s17']) 
 	def execute(self, userdata):
 		# if robot is toward depo, current angle is positive; if facing away, is negative
             	depo_current_angle = math.degrees(math.asin((depo_back_lidar_dist - depo_front_lidar_dist) / DEPO_LIDAR_MOUNT_DIST)) 
@@ -629,7 +629,7 @@ class state16(smach.State):
                 	pass
 
             	if depo_is_parallel and depo_is_close:
-                	return 'state17'
+                	return 's17'
             	else: # Continue navigating to correct distance from deposition zone
                 	"""
                 	# CASE 0: too far forward
@@ -654,14 +654,14 @@ class state16(smach.State):
 # STATE 18: Arms raise frame to upper limit
 class state18(smach.State):
 	def __init__(self):
-         	smach.State.__init__(self, outcomes=['state19']) 
+         	smach.State.__init__(self, outcomes=['s19']) 
 	def execute(self, userdata):
             if (robot_unstable):
                 # Extend arms slightly to distribute weight
                 pass
 
             if (arm_depo_ready):
-                return 'state19'
+                return 's19'
             else:
                 # Continue raising the arms
                 pass
@@ -669,10 +669,10 @@ class state18(smach.State):
 # STATE 19: Open storage bin door to release payload
 class state19(smach.State):
 	def __init__(self):
-         	smach.State.__init__(self, outcomes=['state20']) 
+         	smach.State.__init__(self, outcomes=['s20']) 
 	def execute(self, userdata):
             if (bin_empty):
-                return 'state20'
+                return 's20'
             else:
                 # Send out 'open door' vector
                 outvec = Limb_Vector()
@@ -687,10 +687,10 @@ class state19(smach.State):
 # STATE 20: Close door
 class state20(smach.State):
 	def __init__(self):
-         	smach.State.__init__(self, outcomes=['state21']) 
+         	smach.State.__init__(self, outcomes=['s21']) 
 	def execute(self, userdata):
             if (door_closed):
-                return 'state21'
+                return 's21'
             else:
                 # Send out 'close door' vector
                 outvec = Limb_Vector()
@@ -705,10 +705,10 @@ class state20(smach.State):
 # STATE 21: Close door
 class state21(smach.State):
 	def __init__(self):
-         	smach.State.__init__(self, outcomes=['state22']) 
+         	smach.State.__init__(self, outcomes=['s22']) 
 	def execute(self, userdata):
             if (door_closed):
-                return 'state22'
+                return 's22'
             else:
                 # Close the door
                 pass
@@ -716,10 +716,10 @@ class state21(smach.State):
 # STATE 22: Lower linear actuators into driving configuration
 class state22(smach.State):
 	def __init__(self):
-         	smach.State.__init__(self, outcomes=['state23']) 
+         	smach.State.__init__(self, outcomes=['s23']) 
 	def execute(self, userdata):
             if (lin_act_drive_config):
-                return 'state23'
+                return 's23'
             else:
                 # Continue lowering linear actuators
                 pass
@@ -727,10 +727,10 @@ class state22(smach.State):
 # STATE 23: Lower arms into driving configuration
 class state23(smach.State):
 	def __init__(self):
-         	smach.State.__init__(self, outcomes=['state24']) 
+         	smach.State.__init__(self, outcomes=['s24']) 
 	def execute(self, userdata):
             if (arm_drive_config):
-                return 'state24'
+                return 's24'
             else:
                 # Continue lowering arms
                 pass
@@ -738,7 +738,7 @@ class state23(smach.State):
 # STATE 24: Navigate back/diagonally until April Tags sighted
 class state24(smach.State):
 	def __init__(self):
-         	smach.State.__init__(self, outcomes=['state4']) 
+         	smach.State.__init__(self, outcomes=['s4']) 
 	def execute(self, userdata):
             # Error checking
             if not artag_seen:
@@ -769,7 +769,7 @@ class state24(smach.State):
             
             if ROTATION_TOLERANCE >= abs(desired_orient - robot_pose.orientation):
                 ros_log("robot correct")
-                return 'state4'  # The next state
+                return 's4'  # The next state
             else:
                 # Robot rotates in place
                 outmsg = Drive_Vector()
@@ -781,12 +781,12 @@ class state24(smach.State):
 # STATE Ri5B: Error state of obstacle detected
 class state27(smach.State):
 	def __init__(self):
-         	smach.State.__init__(self, outcomes=['state5']) 
+         	smach.State.__init__(self, outcomes=['s5']) 
 	def execute(self, userdata):
             ros.log("DEBUG STATE 27")
             # If no more obstacle detected, transition back to state 5
             if (not (lidar_data.left or lidar_data.right)):
-                return 'state5'
+                return 's5'
             else:
                 # Turn left if obstacle to the right, & vice versa
                 if (lidar_data.left):
