@@ -1,3 +1,3 @@
 # SMACHStateMachine
 SMACHStateMachine
-Sarah Ruchir Jun
+Sarah Ruchir Chenny
